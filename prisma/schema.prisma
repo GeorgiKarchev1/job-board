@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Job {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Job Status
+  status      String @default("PENDING") // PENDING, APPROVED, REJECTED
+  
+  // Company Information
+  companyName        String
+  companyWebsite     String?
+  companyContact     String  // Email, Telegram, Discord, etc.
+  companyDescription String
+  
+  // Job Information
+  jobTitle       String
+  department     String   // BD, BACKEND, FRONTEND, SMART_CONTRACT
+  locationType   String   // REMOTE, ONSITE, HYBRID
+  location       String?  // Optional free-text location
+  jobType        String   // FULL_TIME, PART_TIME, CONTRACT
+  salaryRange    String?  // Optional salary range
+  jobDescription String   // Markdown or rich text
+  
+  @@map("jobs")
+}
