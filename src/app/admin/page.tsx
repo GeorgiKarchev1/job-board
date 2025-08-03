@@ -14,7 +14,7 @@ import { ClipboardList, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-re
 export default function AdminPage() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<JobStatus | 'ALL'>('ALL')
+  const [filter, setFilter] = useState<JobStatus | 'ALL'>('PENDING') // Default to PENDING jobs
 
   useEffect(() => {
     fetchJobs()
@@ -72,19 +72,27 @@ export default function AdminPage() {
 
   const handleDelete = async (jobId: string) => {
     try {
+      console.log(`🗑️ Deleting job: ${jobId}`)
+      
       const response = await fetch(`/api/admin/jobs/${jobId}`, {
         method: 'DELETE',
       })
 
       if (!response.ok) {
-        throw new Error('Failed to delete job')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete job')
       }
 
+      console.log(`✅ Job deleted successfully: ${jobId}`)
+      
       // Remove from local state
       setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId))
     } catch (error) {
       console.error('Error deleting job:', error)
-      alert('Failed to delete job. Please try again.')
+      alert(`Failed to delete job: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      
+      // Refresh jobs list to ensure UI is in sync
+      fetchJobs()
     }
   }
 
@@ -181,6 +189,16 @@ export default function AdminPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Workflow Info */}
+        <Card className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-900/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center space-x-2 text-blue-700 dark:text-blue-300">
+              <span className="text-sm font-medium">📋 Workflow:</span>
+              <span className="text-sm">New jobs → PENDING → APPROVE → Public Page</span>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Filters */}
         <div className="flex items-center space-x-2 mb-6">
