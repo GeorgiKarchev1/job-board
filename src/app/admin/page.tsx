@@ -34,6 +34,8 @@ export default function AdminPage() {
 
   const handleStatusChange = async (jobId: string, status: JobStatus) => {
     try {
+      console.log(`Updating job ${jobId} to status: ${status}`)
+      
       const response = await fetch(`/api/admin/jobs/${jobId}/status`, {
         method: 'PATCH',
         headers: {
@@ -43,18 +45,28 @@ export default function AdminPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to update job status')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update job status')
       }
 
-      // Update local state
+      // Get the updated job from the response
+      const updatedJob = await response.json()
+      console.log('Job updated successfully:', updatedJob)
+
+      // Update local state with the complete updated job object
       setJobs(prevJobs =>
         prevJobs.map(job =>
-          job.id === jobId ? { ...job, status } : job
+          job.id === jobId ? { ...job, ...updatedJob } : job
         )
       )
+
+      console.log(`Job ${jobId} status changed to ${status} successfully`)
     } catch (error) {
       console.error('Error updating job status:', error)
-      alert('Failed to update job status. Please try again.')
+      alert(`Failed to update job status: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      
+      // Refresh the jobs list to ensure UI is in sync
+      fetchJobs()
     }
   }
 
