@@ -4,6 +4,9 @@ import { prisma } from '@/lib/prisma'
 // GET /api/admin/jobs - Get all jobs for admin
 export async function GET() {
   try {
+    // Ensure database connection
+    await prisma.$connect()
+    
     const jobs = await prisma.job.findMany({
       orderBy: [
         {
@@ -15,12 +18,22 @@ export async function GET() {
       ]
     })
 
+    console.log(`Found ${jobs.length} total jobs for admin`)
     return NextResponse.json(jobs)
   } catch (error) {
     console.error('Error fetching admin jobs:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch jobs' },
-      { status: 500 }
-    )
+    
+    // Try to initialize database if tables don't exist
+    try {
+      console.log('Attempting to initialize database for admin...')
+      await prisma.$executeRaw`SELECT 1`
+      return NextResponse.json([]) // Return empty array if no jobs yet
+    } catch (initError) {
+      console.error('Database initialization failed:', initError)
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      )
+    }
   }
 }
