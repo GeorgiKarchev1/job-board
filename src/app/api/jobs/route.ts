@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { JobSubmissionData } from '@/lib/types'
 import { notifyNewJobSubmission } from '@/lib/telegram'
+import { initializeDatabase } from '@/lib/db-init'
 
 // GET /api/jobs - Get all approved jobs
 export async function GET() {
   try {
+    // Initialize database on first request
+    await initializeDatabase()
+    
     const jobs = await prisma.job.findMany({
       where: {
         status: 'APPROVED'
